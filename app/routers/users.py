@@ -1,22 +1,23 @@
-from sqlmodel import Session, select
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
+from sqlmodel import select
 
-from app.data.db import get_session
-from app.models.user import User
+from app.data.db import SessionDep
 from app.models.registration import Registration
+from app.models.user import User
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/", response_model=list[User])
-def get_users(session: Session = Depends(get_session)) -> list[User]:
+@router.get("", response_model=list[User])
+def get_users(session: SessionDep) -> list[User]:
     """Restituisce la lista di tutti gli utenti."""
 
-    return session.exec(select(User)).all()
+    return list(session.exec(select(User)).all())
 
 
-@router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
-def create_user(user: User, session: Session = Depends(get_session)) -> User:
+@router.post("", response_model=User, status_code=status.HTTP_201_CREATED)
+def create_user(user: User, session: SessionDep) -> User:
     """Crea un nuovo utente."""
 
     existing_user = session.get(User, user.username)
@@ -24,7 +25,7 @@ def create_user(user: User, session: Session = Depends(get_session)) -> User:
     if existing_user is not None:
         raise HTTPException(
             status_code=400,
-            detail="Esiste già un utente con questo username",
+            detail="User already exists",
         )
 
     session.add(user)
@@ -35,19 +36,19 @@ def create_user(user: User, session: Session = Depends(get_session)) -> User:
 
 
 @router.get("/{username}", response_model=User)
-def get_user(username: str, session: Session = Depends(get_session)) -> User:
+def get_user(username: str, session: SessionDep) -> User:
     """Restituisce un utente tramite username."""
 
     user = session.get(User, username)
 
     if user is None:
-        raise HTTPException(status_code=404, detail="Utente non trovato")
+        raise HTTPException(status_code=404, detail="User not found")
 
     return user
 
 
-@router.delete("/")
-def delete_users(session: Session = Depends(get_session)) -> dict[str, str]:
+@router.delete("")
+def delete_users(session: SessionDep) -> str:
     """Elimina tutti gli utenti e tutte le registrazioni associate."""
 
     registrations = session.exec(select(Registration)).all()
@@ -61,17 +62,17 @@ def delete_users(session: Session = Depends(get_session)) -> dict[str, str]:
 
     session.commit()
 
-    return {"message": "Tutti gli utenti sono stati eliminati"}
+    return "All users deleted successfully"
 
 
 @router.delete("/{username}")
-def delete_user(username: str, session: Session = Depends(get_session)) -> dict[str, str]:
-    """Elimina un utente e tutte le sue registrazioni."""
+def delete_user(username: str, session: SessionDep) -> str:
+    """Elimina un utente e le sue registrazioni."""
 
     user = session.get(User, username)
 
     if user is None:
-        raise HTTPException(status_code=404, detail="Utente non trovato")
+        raise HTTPException(status_code=404, detail="User not found")
 
     registrations = session.exec(
         select(Registration).where(Registration.username == username)
@@ -83,4 +84,4 @@ def delete_user(username: str, session: Session = Depends(get_session)) -> dict[
     session.delete(user)
     session.commit()
 
-    return {"message": "Utente eliminato con successo"}
+    return "User deleted successfully"
