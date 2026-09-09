@@ -1,9 +1,21 @@
 from sqlmodel import SQLModel, Field
 
 
-class User(SQLModel, table=True):
+class UserBase(SQLModel):
+    """Campi condivisi da un utente."""
+
+    username: str
+    name: str
+    email: str
+
+
+class User(UserBase, table=True):
     """Rappresenta un utente registrato nel sistema."""
 
     username: str = Field(primary_key=True)
-    name: str
-    email: str
+
+
+class UserCreate(UserBase):
+    """Dati richiesti per la creazione di un utente."""
+
+    pass
