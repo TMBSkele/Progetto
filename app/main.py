@@ -21,10 +21,9 @@ from app.data.db import init_database
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # on start
+    """Inizializza il database all'avvio dell'applicazione."""
     init_database()
     yield
-    # on close
 
 
 app = FastAPI(lifespan=lifespan)

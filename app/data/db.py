@@ -1,4 +1,4 @@
-from sqlmodel import create_engine, SQLModel, Session, select
+from sqlmodel import create_engine, SQLModel, Session
 from typing import Annotated
 from fastapi import Depends
 import os
@@ -17,6 +17,7 @@ engine = create_engine(sqlite_url, connect_args=connect_args, echo=True)
 
 
 def init_database() -> None:
+    """Crea le tabelle del database e inizializza eventuali dati iniziali."""
     ds_exists = os.path.isfile(sqlite_file_name)
     SQLModel.metadata.create_all(engine)
     if not ds_exists:
@@ -27,6 +28,7 @@ def init_database() -> None:
 
 
 def get_session():
+    """Fornisce una sessione SQLModel alle dipendenze FastAPI."""
     with Session(engine) as session:
         yield session
 

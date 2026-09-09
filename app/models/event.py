@@ -23,6 +23,7 @@ class EventCreate(EventBase):
 
     pass
 
+
 class EventUpdate(EventBase):
     """Dati richiesti per l'aggiornamento di un evento."""
 
